@@ -2,6 +2,7 @@ env:
   - MNEMONIC: ${MNEMONIC}
   - MNEMONICS: ${MNEMONICS}
   - NETWORK: ${NETWORK}
+  - PULUMI_CONFIG_PASSPHRASE: ""
 
 steps:
   - name: Ensure terraform installation
@@ -18,3 +19,23 @@ steps:
     command: terraform apply -auto-approve
     depends:
       - Initialize terraform
+
+  - name: Ensure pulumi installation
+    command: pulumi version
+
+  - name: Initialize pulumi
+    dir: deployment/vm_mycelium/pulumi
+    command: |
+        rm -rf deployment/vm_mycelium/pulumi/state;
+        mkdir deployment/vm_mycelium/pulumi/state;
+        pulumi login --cloud-url file://deployment/vm_mycelium/pulumi/state;
+        pulumi stack init test
+    depends:
+      - Ensure pulumi installation
+
+  - name: Deploy a vm with mycelium using pulumi
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi up --yes --stack test
+    depends:
+      - Initialize pulumi
+      - Deploy a vm with mycelium using terraform

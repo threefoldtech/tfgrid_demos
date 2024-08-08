@@ -12,3 +12,17 @@ steps:
     command: terraform destroy -auto-approve
     depends:
       - Ensure terraform installation
+
+  - name: Ensure pulumi installation
+    command: pulumi version
+
+  - name: Delete a vm with mycelium using pulumi
+    dir: deployment/vm_mycelium/pulumi
+    command: |
+        pulumi destroy --yes --stack test;
+        pulumi stack rm --yes;
+        pulumi logout;
+        rm -rf deployment/vm_mycelium/pulumi/state 
+    depends:
+      - Ensure pulumi installation
+      - Delete a vm with mycelium using terraform
