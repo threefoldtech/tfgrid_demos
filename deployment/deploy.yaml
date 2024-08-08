@@ -1,0 +1,20 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+  - name: Ensure terraform installation
+    command: terraform -version
+
+  - name: Initialize terraform
+    dir: deployment/vm_mycelium/terraform
+    command: terraform init
+    depends:
+      - Ensure terraform installation
+
+  - name: Deploy a vm with mycelium using terraform
+    dir: deployment/vm_mycelium/terraform
+    command: terraform apply -auto-approve
+    depends:
+      - Initialize terraform

@@ -1,0 +1,14 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+  - name: Ensure terraform installation
+    command: terraform -version
+
+  - name: Delete a vm with mycelium using terraform
+    dir: deployment/vm_mycelium/terraform
+    command: terraform destroy -auto-approve
+    depends:
+      - Ensure terraform installation
