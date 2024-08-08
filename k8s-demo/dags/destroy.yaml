@@ -1,0 +1,18 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+   # ensure terraform installation
+  - name: ensure installation
+    description: ensure terraform installation
+    command: terraform version
+
+  # clean up after deployment is done
+  - name: terraform destroy
+    command: terraform destroy -auto-approve
+    description: clean up after deployment is done
+    dir: deployment
+    depends:
+      - ensure installation 

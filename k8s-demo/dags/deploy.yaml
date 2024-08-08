@@ -1,24 +1,26 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
 steps:
-  - name: terraform version
+   # ensure terraform installation
+  - name: ensure installation
+    description: ensure terraform installation
     command: terraform version
 
   # initializing terraform provider plugins
   - name: terraform init
     command: terraform init
+    description: initializing terraform provider plugins
     dir: deployment
     depends:
-      - terraform version
+      - ensure installation
 
   # deploy k8s cluster using terraform
   - name: terraform apply
     command: terraform apply -auto-approve
+    description: deploy k8s cluster using terraform
     dir: deployment
     depends:
       - terraform init
-
-  # clean up after deployment is done
-  - name: terraform destroy
-    command: terraform destroy -auto-approve
-    dir: deployment
-    depends:
-      - terraform apply
