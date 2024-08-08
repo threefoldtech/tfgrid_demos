@@ -16,3 +16,6 @@ pkg/state/state.json
 Pulumi.*.yaml
 schema--threefold.json
 state
+
+# Tfrobot
+output.yaml

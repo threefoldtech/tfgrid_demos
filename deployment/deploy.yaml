@@ -1,6 +1,6 @@
 env:
   - MNEMONIC: ${MNEMONIC}
-  - MNEMONICS: ${MNEMONICS}
+  - MNEMONICS: ${MNEMONIC}
   - NETWORK: ${NETWORK}
   - PULUMI_CONFIG_PASSPHRASE: ""
 
@@ -23,19 +23,37 @@ steps:
   - name: Ensure pulumi installation
     command: pulumi version
 
-  - name: Initialize pulumi
+  - name: Pulumi create state
     dir: deployment/vm_mycelium/pulumi
-    command: |
-        rm -rf deployment/vm_mycelium/pulumi/state;
-        mkdir deployment/vm_mycelium/pulumi/state;
-        pulumi login --cloud-url file://deployment/vm_mycelium/pulumi/state;
-        pulumi stack init test
+    command: mkdir -p state
     depends:
       - Ensure pulumi installation
+
+  - name: Pulumi login
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi login --cloud-url file://state
+    depends:
+      - Pulumi create state
+
+  - name: Pulumi init stack
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi stack init test
+    depends:
+      - Pulumi login
 
   - name: Deploy a vm with mycelium using pulumi
     dir: deployment/vm_mycelium/pulumi
     command: pulumi up --yes --stack test
     depends:
-      - Initialize pulumi
+      - Pulumi init stack
       - Deploy a vm with mycelium using terraform
+
+  - name: Ensure tfrobot installation
+    command: tfrobot version
+
+  - name: Deploy a vm with mycelium tfrobot
+    dir: deployment/vm_mycelium/tf-robot
+    command: tfrobot deploy -c config.yaml
+    depends:
+      - Ensure tfrobot installation
+      - Deploy a vm with mycelium using pulumi
