@@ -1,11 +1,31 @@
 # monitored mariadb cluster
 
-demo deploying a full mariadb cluster exposing its metrics with mysql exporter to be scrapped by prometheus and visualize a simple dashboard with grafana.
+demo deploying a full mariadb cluster (one master and 2 workers) each exposing its two metrics by mysqld-exporter and node-exporter.
 
-## image
+the cluster is scrapped by prometheus and visualize a full node dashboard with grafana.
 
-- [monitored mariadb cluster image](https://github.com/threefoldtech/tf-images/tree/development/tfgrid3/monitored_mariadb)
-- [flist](https://hub.grid.tf/omarabdulaziz.3bot/omarabdul3ziz-tfgrid_mariadb_demo-latest.flist)
+## images
+
+MariaDb image:
+
+- source: https://github.com/threefoldtech/tf-images/tree/development/tfgrid3/mariadb
+- flist: https://hub.grid.tf/omarabdulaziz.3bot/omarabdul3ziz-mariadb-latest.flist
+
+  includes:
+
+  - mariadb server
+  - node_exporter
+  - mysqld_exporter
+
+Monitor image:
+
+- source: https://github.com/threefoldtech/tf-images/tree/development/tfgrid3/monitor
+- flist: https://hub.grid.tf/omarabdulaziz.3bot/omarabdul3ziz-monitor-latest.flist
+
+  includes:
+
+  - prometheus
+  - grafana
 
 ## deployment
 
@@ -22,7 +42,7 @@ it uses the terraform client with this script ./tf/main.tf which will deploy the
 to simply run the scripts, use dago.
 
 ```bash
-dagu start ./dags/deploy.yaml
+dagu start ./dags/deploy-maria-cluster.yaml
 dagu stop ./dags/deploy.yaml
 ```
 
