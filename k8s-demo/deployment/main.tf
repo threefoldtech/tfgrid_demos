@@ -72,6 +72,23 @@ resource "grid_scheduler" "sched" {
     mru      = 2048
     distinct = true
   }
+  requests {
+    name = "monitor_node"
+    cru  = 1
+    sru  = 1024 * 10
+    mru  = 1024 * 2
+    distinct = true
+  }
+  requests {
+    name             = "gateway_node1"
+    public_config    = true
+    public_ips_count = 1
+  }
+  requests {
+    name             = "gateway_node2"
+    public_config    = true
+    public_ips_count = 1
+  }
 }
 
 locals {
@@ -133,33 +150,99 @@ resource "grid_kubernetes" "k8s1" {
     memory           = 2048
     mycelium_ip_seed = random_bytes.worker2_mycelium_ip_seed.hex
   }
+
+  connection {
+    type    = "ssh"
+    user    = "root"
+    timeout = "30s"
+    host    = split("/", self.master[0].computedip)[0]
+    private_key = file("~/.ssh/id_rsa")
+  }
+
+  provisioner "file" {
+    source      = "../scripts"
+    destination = "scripts"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +777 scripts/*",
+      "./scripts/init.sh"
+    ]
+  }
 }
 
-output "computed_master_public_ip" {
-  value = grid_kubernetes.k8s1.master[0].computedip
+resource "grid_deployment" "monitor" {
+  solution_type = local.solution_type
+  name          = local.name
+  node          = grid_scheduler.sched.nodes["monitor_node"]
+  network_name  = grid_network.net1.name
+
+  vms {
+    name       = "monitor"
+    flist      = "https://hub.grid.tf/omarabdulaziz.3bot/omarabdul3ziz-monitor-latest.flist"
+    entrypoint = "/sbin/zinit init"
+    cpu        = 1
+    memory     = 1024 * 2
+    planetary   = true
+    env_vars = {
+      SSH_KEY = file("~/.ssh/id_rsa.pub")
+      PROM_TARGETS = format("[%s]:9501,[%s]:9501,[%s]:9501,[%s]:9501",
+        grid_kubernetes.k8s1.master[0].planetary_ip,
+        grid_kubernetes.k8s1.workers[0].planetary_ip,
+        grid_kubernetes.k8s1.workers[1].planetary_ip,
+        grid_kubernetes.k8s1.workers[2].planetary_ip
+      )
+    }
+  }
 }
 
-output "computed_master_mycelium_ip" {
-  value = grid_kubernetes.k8s1.master[0].mycelium_ip
+resource "grid_name_proxy" "gateway1" {
+  node            = grid_scheduler.sched.nodes["gateway_node1"]
+  name            = "grafana"
+  backends        = [format("http://[%s]:3000", grid_deployment.monitor.vms[0].planetary_ip)]
+  tls_passthrough = false
 }
 
-output "computed_worker0_mycelium_ip" {
-  value = grid_kubernetes.k8s1.workers[0].mycelium_ip
+resource "grid_name_proxy" "gateway2" {
+  node            = grid_scheduler.sched.nodes["gateway_node2"]
+  name            = "prometheus"
+  backends        = [format("http://[%s]:9090", grid_deployment.monitor.vms[0].planetary_ip)]
+  tls_passthrough = false
 }
 
-output "computed_worker1_mycelium_ip" {
-  value = grid_kubernetes.k8s1.workers[1].mycelium_ip
+output "grafana_hostname" {
+  value = grid_name_proxy.gateway1.fqdn
 }
 
-output "computed_worker2_mycelium_ip" {
-  value = grid_kubernetes.k8s1.workers[2].mycelium_ip
+output "prometheus_hostname" {
+  value = grid_name_proxy.gateway2.fqdn
 }
 
-output "wg_config" {
-  value = grid_network.net1.access_wg_config
-}
-
-output "master_console_url" {
-  value = grid_kubernetes.k8s1.master[0].console_url
-}
-
+# output "computed_master_public_ip" {
+#   value = grid_kubernetes.k8s1.master[0].computedip
+# }
+#
+# output "computed_master_mycelium_ip" {
+#   value = grid_kubernetes.k8s1.master[0].mycelium_ip
+# }
+#
+# output "computed_worker0_mycelium_ip" {
+#   value = grid_kubernetes.k8s1.workers[0].mycelium_ip
+# }
+#
+# output "computed_worker1_mycelium_ip" {
+#   value = grid_kubernetes.k8s1.workers[1].mycelium_ip
+# }
+#
+# output "computed_worker2_mycelium_ip" {
+#   value = grid_kubernetes.k8s1.workers[2].mycelium_ip
+# }
+#
+# output "wg_config" {
+#   value = grid_network.net1.access_wg_config
+# }
+#
+# output "master_console_url" {
+#   value = grid_kubernetes.k8s1.master[0].console_url
+# }
