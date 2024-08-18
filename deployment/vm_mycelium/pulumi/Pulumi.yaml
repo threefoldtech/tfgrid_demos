@@ -1,0 +1,80 @@
+name: pulumi-threefold
+runtime: yaml
+
+resources:
+  provider:
+    type: pulumi:providers:threefold
+    options:
+      pluginDownloadURL: github://api.github.com/threefoldtech/pulumi-threefold
+    properties:
+      mnemonic: 
+  scheduler:
+    type: threefold:provider:Scheduler
+    options:
+      provider: ${provider}
+    properties:
+      mru: 0.25 # 256 megabytes
+      sru: 2
+      farm_ids: [1]
+      ipv4: true
+      free_ips: 1
+
+  network:
+    type: threefold:provider:Network
+    options:
+      provider: ${provider}
+      dependsOn:
+        - ${scheduler}
+    properties:
+      name: pulumi_mycelium
+      description: network with mycelium
+      nodes:
+        - ${scheduler.nodes[0]}
+      ip_range: 10.1.0.0/16
+      mycelium: true
+
+  deployment:
+    type: threefold:provider:Deployment
+    options:
+      provider: ${provider}
+      dependsOn:
+        - ${network}
+    properties:
+      node_id: ${scheduler.nodes[0]}
+      name: pulumi_mycelium
+      network_name: pulumi_mycelium
+      vms:
+        - name: pulumi_vm
+          flist: https://hub.grid.tf/tf-official-apps/threefoldtech-ubuntu-22.04.flist
+          entrypoint: "/sbin/zinit init"
+          network_name: pulumi_mycelium
+          cpu: 2
+          memory: 256
+          planetary: true
+          mycelium: true
+          mounts:
+            - disk_name: data
+              mount_point: /app
+          env_vars:
+            SSH_KEY: 
+
+      disks:
+        - name: data
+          size: 2
+
+  gatewayName:
+    type: threefold:provider:GatewayName
+    options:
+      provider: ${provider}
+      dependsOn:
+        - ${deployment}
+    properties:
+      name: pulumi_gw
+      node_id: ${scheduler.nodes[0]}
+      backends:
+        - http://[${deployment.vms_computed[0].mycelium_ip}]:9000
+
+outputs:
+  node_deployment_id: ${deployment.node_deployment_id}
+  planetary_ip: ${deployment.vms_computed[0].planetary_ip}
+  mycelium_ip: ${deployment.vms_computed[0].mycelium_ip}

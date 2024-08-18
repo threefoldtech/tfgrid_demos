@@ -1,0 +1,21 @@
+# Terraform
+terraform.tfplan
+terraform.tfstate
+**/.terraform*
+./*.tfstate
+.terraform/
+*.lock.hcl
+state.json
+*.backup
+
+## Keep windows files with windows line endings
+*.winfile eol=crlf
+pkg/state/state.json
+
+# Pulumi
+Pulumi.*.yaml
+schema--threefold.json
+state
+
+# Tfrobot
+output.yaml
