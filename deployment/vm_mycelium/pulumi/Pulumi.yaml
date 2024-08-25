@@ -9,7 +9,7 @@ resources:
     properties:
       mnemonic: 
   scheduler:
-    type: threefold:provider:Scheduler
+    type: threefold:Scheduler
     options:
       provider: ${provider}
     properties:
@@ -20,7 +20,7 @@ resources:
       free_ips: 1
 
   network:
-    type: threefold:provider:Network
+    type: threefold:Network
     options:
       provider: ${provider}
       dependsOn:
@@ -34,7 +34,7 @@ resources:
       mycelium: true
 
   deployment:
-    type: threefold:provider:Deployment
+    type: threefold:Deployment
     options:
       provider: ${provider}
       dependsOn:
@@ -63,7 +63,7 @@ resources:
           size: 2
 
   gatewayName:
-    type: threefold:provider:GatewayName
+    type: threefold:GatewayName
     options:
       provider: ${provider}
       dependsOn:

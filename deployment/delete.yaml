@@ -45,7 +45,7 @@ steps:
   - name: Ensure tfrobot installation
     command: tfrobot version
 
-  - name: Delete a vm with mycelium tfrobot
+  - name: Delete a vm with mycelium using tfrobot
     dir: deployment/vm_mycelium/tf-robot
     command: tfrobot cancel -c config.yaml
     depends:
