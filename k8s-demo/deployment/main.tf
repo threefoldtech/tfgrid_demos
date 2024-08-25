@@ -25,6 +25,10 @@ resource "random_bytes" "worker2_mycelium_ip_seed" {
   length = 6
 }
 
+resource "random_bytes" "monitor_mycelium_ip_seed" {
+  length = 6
+}
+
 resource "random_bytes" "master_mycelium_key" {
   length = 32
 }
@@ -38,6 +42,10 @@ resource "random_bytes" "worker1_mycelium_key" {
 }
 
 resource "random_bytes" "worker2_mycelium_key" {
+  length = 32
+}
+
+resource "random_bytes" "monitor_mycelium_key" {
   length = 32
 }
 
@@ -107,6 +115,7 @@ resource "grid_network" "net1" {
     format("%s", grid_scheduler.sched.nodes["worker0_node"]) = random_bytes.worker0_mycelium_key.hex
     format("%s", grid_scheduler.sched.nodes["worker1_node"]) = random_bytes.worker1_mycelium_key.hex
     format("%s", grid_scheduler.sched.nodes["worker2_node"]) = random_bytes.worker2_mycelium_key.hex
+    format("%s", grid_scheduler.sched.nodes["monitor_node"]) = random_bytes.monitor_mycelium_key.hex
   }
 }
 
@@ -151,17 +160,18 @@ resource "grid_kubernetes" "k8s1" {
     mycelium_ip_seed = random_bytes.worker2_mycelium_ip_seed.hex
   }
 
-  connection {
-    type    = "ssh"
-    user    = "root"
-    timeout = "30s"
-    host    = split("/", self.master[0].computedip)[0]
-    private_key = file("~/.ssh/id_rsa")
-  }
-
   provisioner "file" {
     source      = "../scripts"
     destination = "scripts"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.master[0].computedip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+
   }
 
   provisioner "remote-exec" {
@@ -169,6 +179,100 @@ resource "grid_kubernetes" "k8s1" {
       "chmod +777 scripts/*",
       "./scripts/init.sh"
     ]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.master[0].computedip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+  provisioner "file" {
+    source      = "../scripts"
+    destination = "scripts"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[0].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +777 scripts/*",
+      "./scripts/init.sh"
+    ]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[0].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+
+  provisioner "file" {
+    source      = "../scripts"
+    destination = "scripts"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[1].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +777 scripts/*",
+      "./scripts/init.sh"
+    ]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[1].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+
+  provisioner "file" {
+    source      = "../scripts"
+    destination = "scripts"
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[2].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +777 scripts/*",
+      "./scripts/init.sh"
+    ]
+
+    connection {
+      type    = "ssh"
+      user    = "root"
+      timeout = "30s"
+      host    = split("/", self.workers[2].mycelium_ip)[0]
+      private_key = file("~/.ssh/id_rsa")
+    }
   }
 }
 
@@ -184,31 +288,55 @@ resource "grid_deployment" "monitor" {
     entrypoint = "/sbin/zinit init"
     cpu        = 1
     memory     = 1024 * 2
-    planetary   = true
     env_vars = {
       SSH_KEY = file("~/.ssh/id_rsa.pub")
       PROM_TARGETS = format("[%s]:9501,[%s]:9501,[%s]:9501,[%s]:9501",
-        grid_kubernetes.k8s1.master[0].planetary_ip,
-        grid_kubernetes.k8s1.workers[0].planetary_ip,
-        grid_kubernetes.k8s1.workers[1].planetary_ip,
-        grid_kubernetes.k8s1.workers[2].planetary_ip
+        grid_kubernetes.k8s1.master[0].mycelium_ip,
+        grid_kubernetes.k8s1.workers[0].mycelium_ip,
+        grid_kubernetes.k8s1.workers[1].mycelium_ip,
+        grid_kubernetes.k8s1.workers[2].mycelium_ip,
       )
     }
+    mycelium_ip_seed = random_bytes.monitor_mycelium_ip_seed.hex
   }
 }
 
 resource "grid_name_proxy" "gateway1" {
   node            = grid_scheduler.sched.nodes["gateway_node1"]
   name            = "grafana"
-  backends        = [format("http://[%s]:3000", grid_deployment.monitor.vms[0].planetary_ip)]
+  backends        = [format("http://[%s]:3000", grid_deployment.monitor.vms[0].mycelium_ip)]
   tls_passthrough = false
 }
 
 resource "grid_name_proxy" "gateway2" {
   node            = grid_scheduler.sched.nodes["gateway_node2"]
   name            = "prometheus"
-  backends        = [format("http://[%s]:9090", grid_deployment.monitor.vms[0].planetary_ip)]
+  backends        = [format("http://[%s]:9090", grid_deployment.monitor.vms[0].mycelium_ip)]
   tls_passthrough = false
+}
+
+output "computed_master_public_ip" {
+  value = grid_kubernetes.k8s1.master[0].computedip
+}
+
+output "computed_master_mycelium_ip" {
+  value = grid_kubernetes.k8s1.master[0].mycelium_ip
+}
+
+output "computed_worker0_mycelium_ip" {
+  value = grid_kubernetes.k8s1.workers[0].mycelium_ip
+}
+
+output "computed_worker1_mycelium_ip" {
+  value = grid_kubernetes.k8s1.workers[1].mycelium_ip
+}
+
+output "computed_worker2_mycelium_ip" {
+  value = grid_kubernetes.k8s1.workers[2].mycelium_ip
+}
+
+output "master_console_url" {
+  value = grid_kubernetes.k8s1.master[0].console_url
 }
 
 output "grafana_hostname" {
@@ -219,30 +347,3 @@ output "prometheus_hostname" {
   value = grid_name_proxy.gateway2.fqdn
 }
 
-# output "computed_master_public_ip" {
-#   value = grid_kubernetes.k8s1.master[0].computedip
-# }
-#
-# output "computed_master_mycelium_ip" {
-#   value = grid_kubernetes.k8s1.master[0].mycelium_ip
-# }
-#
-# output "computed_worker0_mycelium_ip" {
-#   value = grid_kubernetes.k8s1.workers[0].mycelium_ip
-# }
-#
-# output "computed_worker1_mycelium_ip" {
-#   value = grid_kubernetes.k8s1.workers[1].mycelium_ip
-# }
-#
-# output "computed_worker2_mycelium_ip" {
-#   value = grid_kubernetes.k8s1.workers[2].mycelium_ip
-# }
-#
-# output "wg_config" {
-#   value = grid_network.net1.access_wg_config
-# }
-#
-# output "master_console_url" {
-#   value = grid_kubernetes.k8s1.master[0].console_url
-# }
