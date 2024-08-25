@@ -40,7 +40,7 @@ locals {
 }
 
 resource "grid_network" "net" {
-  name          = "network"
+  name          = "neonet"
   ip_range      = "10.1.0.0/16"
   nodes         = [local.maria_master_node, local.maria_workers_node, local.monitor_node]
   add_wg_access = true
@@ -141,4 +141,8 @@ resource "grid_name_proxy" "gateway" {
 
 output "hostname" {
   value = grid_name_proxy.gateway.fqdn
+}
+
+output "monitor_ip" {
+  value = grid_deployment.monitor.vms[0].planetary_ip
 }
