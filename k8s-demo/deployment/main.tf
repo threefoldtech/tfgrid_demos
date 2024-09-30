@@ -53,7 +53,7 @@ resource "grid_scheduler" "sched" {
   requests {
     name             = "master_node"
     cru              = 2
-    sru              = 512
+    sru              = 2048
     mru              = 2048
     distinct         = true
     public_ips_count = 1
@@ -62,21 +62,21 @@ resource "grid_scheduler" "sched" {
   requests {
     name     = "worker0_node"
     cru      = 2
-    sru      = 512
+    sru      = 2048
     mru      = 2048
     distinct = true
   }
   requests {
     name     = "worker1_node"
     cru      = 2
-    sru      = 512
+    sru      = 2048
     mru      = 2048
     distinct = true
   }
   requests {
     name     = "worker2_node"
     cru      = 2
-    sru      = 512
+    sru      = 2048
     mru      = 2048
     distinct = true
   }
