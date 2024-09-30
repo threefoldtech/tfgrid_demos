@@ -1,0 +1,16 @@
+name: destroy the deployment
+tags: demo
+
+env:
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+  - name: validate
+    command: terraform version
+
+  - name: destroy
+    command: terraform destroy --auto-approve
+    dir: mariadb-demo/tf
+    depends:
+      - validate
