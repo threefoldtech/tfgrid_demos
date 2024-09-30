@@ -3,7 +3,7 @@
 ## Usage:
 1. Run dagu server
 ``` console
-dagu server --dags dags
+dagu server --dags ./k8s-demo/dags
 ```
 
 2. Launch the Web UI

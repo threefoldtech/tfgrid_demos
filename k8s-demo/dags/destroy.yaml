@@ -8,12 +8,12 @@ steps:
   - name: ensure installation
     command: terraform version
     description: ensure terraform installation
-    dir: deployment
+    dir: k8s-demo/deployment
 
   # clean up after deployment is done
   - name: terraform destroy
     command: terraform destroy -auto-approve
     description: clean up after deployment is done
-    dir: deployment
+    dir: k8s-demo/deployment
     depends:
       - ensure installation 

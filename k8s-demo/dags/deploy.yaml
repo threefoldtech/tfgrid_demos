@@ -8,13 +8,13 @@ steps:
   - name: ensure installation
     description: ensure terraform installation
     command: terraform version
-    dir: deployment
+    dir: k8s-demo/deployment
 
   # initializing terraform provider plugins
   - name: terraform init
     command: terraform init --upgrade
     description: initializing terraform provider plugins
-    dir: deployment
+    dir: k8s-demo/deployment
     depends:
       - ensure installation
 
@@ -22,6 +22,6 @@ steps:
   - name: terraform apply
     command: terraform apply -auto-approve
     description: deploy k8s cluster using terraform
-    dir: deployment
+    dir: k8s-demo/deployment
     depends:
       - terraform init
