@@ -24,3 +24,11 @@ dagu server --dags mariadb-demo
 ```
 
 check [docs](mariadb-demo/README.md)
+
+## Run K8S cluster with monitor
+
+```bash
+dagu server --dags ./k8s-demo/dags
+```
+
+check [docs](k8s-demo/README.md)

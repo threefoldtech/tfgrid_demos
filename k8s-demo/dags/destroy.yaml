@@ -1,0 +1,19 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+   # ensure terraform installation
+  - name: ensure installation
+    command: terraform version
+    description: ensure terraform installation
+    dir: k8s-demo/deployment
+
+  # clean up after deployment is done
+  - name: terraform destroy
+    command: terraform destroy -auto-approve
+    description: clean up after deployment is done
+    dir: k8s-demo/deployment
+    depends:
+      - ensure installation 
