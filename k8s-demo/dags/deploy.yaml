@@ -8,6 +8,7 @@ steps:
   - name: ensure installation
     description: ensure terraform installation
     command: terraform version
+    dir: deployment
 
   # initializing terraform provider plugins
   - name: terraform init

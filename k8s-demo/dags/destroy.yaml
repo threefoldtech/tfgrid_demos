@@ -6,8 +6,9 @@ env:
 steps:
    # ensure terraform installation
   - name: ensure installation
-    description: ensure terraform installation
     command: terraform version
+    description: ensure terraform installation
+    dir: deployment
 
   # clean up after deployment is done
   - name: terraform destroy

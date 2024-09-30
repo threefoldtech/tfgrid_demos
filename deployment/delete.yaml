@@ -1,0 +1,53 @@
+env:
+  - MNEMONIC: ${MNEMONIC}
+  - MNEMONICS: ${MNEMONIC}
+  - NETWORK: ${NETWORK}
+  - PULUMI_CONFIG_PASSPHRASE: ""
+
+steps:
+  - name: Ensure terraform installation
+    command: terraform -version
+
+  - name: Delete a vm with mycelium using terraform
+    dir: deployment/vm_mycelium/terraform
+    command: terraform destroy -auto-approve
+    depends:
+      - Ensure terraform installation
+
+  - name: Ensure pulumi installation
+    command: pulumi version
+
+  - name: Delete a vm with mycelium using pulumi
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi destroy --yes --stack test 
+    depends:
+      - Ensure pulumi installation
+      - Delete a vm with mycelium using terraform
+
+  - name: Pulumi remove stack
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi stack rm --yes 
+    depends:
+      - Delete a vm with mycelium using pulumi
+
+  - name: Pulumi logout
+    dir: deployment/vm_mycelium/pulumi
+    command: pulumi logout
+    depends:
+      - Pulumi remove stack
+
+  - name: Pulumi remove state
+    dir: deployment/vm_mycelium/pulumi
+    command: rm -rf state
+    depends:
+      - Pulumi logout
+
+  - name: Ensure tfrobot installation
+    command: tfrobot version
+
+  - name: Delete a vm with mycelium using tfrobot
+    dir: deployment/vm_mycelium/tf-robot
+    command: tfrobot cancel -c config.yaml
+    depends:
+      - Ensure tfrobot installation
+      - Delete a vm with mycelium using pulumi
