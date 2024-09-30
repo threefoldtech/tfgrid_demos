@@ -11,6 +11,6 @@ steps:
 
   - name: destroy
     command: terraform destroy --auto-approve
-    dir: tf
+    dir: mariadb-demo/tf
     depends:
       - validate

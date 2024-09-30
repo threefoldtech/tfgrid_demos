@@ -16,3 +16,11 @@ dagu server --dags deployment
 ```
 
 3. You can access dagu UI through `http://127.0.0.1:8080`
+
+## Run mariadb cluster with monitor
+
+```bash
+dagu server --dags mariadb-demo
+```
+
+check [docs](mariadb-demo/README.md)

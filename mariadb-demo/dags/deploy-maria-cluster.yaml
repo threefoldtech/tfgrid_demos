@@ -12,12 +12,12 @@ steps:
 
   - name: init
     command: terraform init
-    dir: tf
+    dir: mariadb-demo/tf
     depends:
       - validate
 
   - name: deploy
     command: terraform apply --auto-approve
-    dir: tf
+    dir: mariadb-demo/tf
     depends:
       - init
