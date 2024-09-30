@@ -1,0 +1,23 @@
+name: Deploy mariadb cluster
+description: deploy mariadb cluster with prometheus and grafana on the grid
+tags: demo
+
+env:
+  - MNEMONICS: ${MNEMONICS}
+  - NETWORK: ${NETWORK}
+
+steps:
+  - name: validate
+    command: terraform version
+
+  - name: init
+    command: terraform init
+    dir: mariadb-demo/tf
+    depends:
+      - validate
+
+  - name: deploy
+    command: terraform apply --auto-approve
+    dir: mariadb-demo/tf
+    depends:
+      - init
