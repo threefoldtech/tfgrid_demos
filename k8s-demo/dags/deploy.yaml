@@ -11,7 +11,7 @@ steps:
 
   # initializing terraform provider plugins
   - name: terraform init
-    command: terraform init
+    command: terraform init --upgrade
     description: initializing terraform provider plugins
     dir: deployment
     depends:
